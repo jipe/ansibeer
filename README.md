@@ -7,8 +7,8 @@ built for testing puppet modules in a Docker container.
 
 ## Prerequisites
 
-Your Ansible repository needs to be available either in $HOME/ansible
-or in a directory specified by the ANSIBLE_HOME environment variable.
+Your Ansible repository needs to be available either in `$HOME/ansible`
+or in a directory specified by the `ANSIBLE_HOME` environment variable.
 
 ## Using it
 
@@ -26,7 +26,7 @@ There are convenience scripts for using `debian:jessie` and `debian:stretch`.
 These are `jessie.sh` and `stretch.sh` respectively. So you could test on
 a Debian Jessie container with
 
-    $ ./jessie <playbook>
+    $ ./jessie.sh <playbook>
 
 The `playbooks` directory is in `.gitignore`, so that is a perfectly fine
 place for putting your experimental playbooks you want to test.
