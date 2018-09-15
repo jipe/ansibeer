@@ -1,0 +1,6 @@
+---
+- name: 'Test playbook'
+  hosts: localhost
+  tasks:
+    - debug:
+
