@@ -10,8 +10,6 @@ built for testing puppet modules in a Docker container.
 Your Ansible repository needs to be available either in `$HOME/ansible`
 or in a directory specified by the `ANSIBLE_HOME` environment variable.
 
-The playbook you want to test must have `hosts: localhost` in it.
-
 ## Using it
 
     $ ./run.sh --image <docker-image> <playbook>
