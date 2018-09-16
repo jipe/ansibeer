@@ -95,10 +95,15 @@ then
   image=$new_image
 fi
 
+if [ -n "$(echo $playbook | cut -d'/' -f1)" ]
+then
+  playbook=$PWD/$playbook
+fi
+
 docker run -ti -d --rm \
                   --name ansibeer \
                   -v $ansible_home:/etc/ansible:ro \
-                  -v $PWD/$playbook:/playbook:rw \
+                  -v $playbook:/playbook:rw \
                   $image bash
 
 if [ ! "$?" == "0" ]
@@ -127,7 +132,7 @@ fi
 echo "Applying playbook"
 
 docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' /playbook
-exit_code = $?
+exit_code=$?
 
 if [ -t 1 ]
 then
