@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ./run.sh --image "debian:jessie" "$@"
+exec ./run.sh --default-image "debian:jessie" "$@"

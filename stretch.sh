@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ./run.sh --image "debian:stretch" "$@"
+exec ./run.sh --default-image "debian:stretch" "$@"

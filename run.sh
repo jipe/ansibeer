@@ -29,15 +29,15 @@ function usage {
 default_ansible_home=$HOME/ansible
 ansible_home=${ANSIBLE_HOME:-$default_ansible_home}
 default_image=debian:stretch
-image=${IMAGE:-$default_image}
-
-echo "Ansible home is '$ansible_home'"
 
 for arg
 do
   if [ -n "$expect" ]
   then
     case $expect in
+      default_image)
+        default_image=$arg
+        ;;
       image)
         image=$arg
         ;;
@@ -56,6 +56,12 @@ do
         ;;
       --ansible-home=*)
         ansible_home=${arg##--ansible-home=}
+        ;;
+      --default-image)
+        expect=default_image
+        ;;
+      --default-image=*)
+        default_image=${arg##--default-image=}
         ;;
       -f|--facts)
         show_facts=true
@@ -79,6 +85,11 @@ do
     esac
   fi
 done
+
+if [ -z "$image" ]
+then
+  image=${IMAGE:-$default_image}
+fi
 
 if [ -f dockerfiles/$image ]
 then
