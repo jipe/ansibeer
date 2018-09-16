@@ -7,15 +7,16 @@ built for testing puppet modules in a Docker container.
 
 ## Prerequisites
 
-Your Ansible repository needs to be available either in `$HOME/ansible`
-or in a directory specified by the `ANSIBLE_HOME` environment variable.
+You need to have Docker installed.
 
 ## Using it
 
     $ ./run.sh --image <docker-image> <playbook>
 
 Will run `ansible-playbook` inside a container and drop you to a prompt
-for inspecting the container afterwards.
+for inspecting the container afterwards. Your Ansible repository is assumed
+to be in `$HOME/ansible` or you can specify it either using the `-a` argument
+or by setting the `ANSIBLE_HOME` environment variable to point to its location.
 
 The docker image needs to have Ansible installed. If this is not the
 case, you can put a Dockerfile that will install Ansible with the same
