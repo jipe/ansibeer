@@ -5,6 +5,7 @@ function usage {
   if [ -n "$error" ]
   then
     echo "ERROR: $error"
+    echo
     exit_code=1
   else
     exit_code=0
@@ -15,14 +16,20 @@ function usage {
   echo "Build and run a container and run the Ansible playbook inside of it"
   echo
   echo "Options:"
-  echo "  -i, --image : Specify the base Docker image to use"
+  echo "  -a, --ansible-home : Specify location of Ansible repository"
+  echo "                       Default: ANSIBLE_HOME env var or $default_ansible_home"
+  echo "  -f,        --facts : Show container facts"
+  echo "  -i,        --image : Specify the base Docker image to use"
+  echo "                       Default: IMAGE env var or $default_image"
   echo
 
   exit $exit_code
 }
 
-ansible_home=${ANSIBLE_HOME:-$HOME/ansible}
-image=debian:stretch
+default_ansible_home=$HOME/ansible
+ansible_home=${ANSIBLE_HOME:-$default_ansible_home}
+default_image=debian:stretch
+image=${IMAGE:-$default_image}
 
 echo "Ansible home is '$ansible_home'"
 
@@ -34,9 +41,11 @@ do
       image)
         image=$arg
         ;;
+      -*)
+        usage "Value for '$expect' seems to be a flag"
+        ;;
       *)
         usage "Uncaught expected value '$arg' for '$expect'"
-        exit 1
         ;;
     esac
     unset expect
@@ -48,14 +57,17 @@ do
       --ansible-home=*)
         ansible_home=${arg##--ansible-home=}
         ;;
+      -f|--facts)
+        show_facts=true
+        ;;
+      -h|--help)
+        usage
+        ;;
       -i|--image)
         expect=image
         ;;
       --image=*)
         image=${arg##--image=}
-        ;;
-      -h|--help)
-        usage
         ;;
       *)
         if [ -n "$playbook" ]
@@ -70,7 +82,7 @@ done
 
 if [ -f dockerfiles/$image ]
 then
-  new_image=ansible-test-$(echo $image | tr '/:' '--'):${playbook##*/}
+  new_image=ansibeer-$(echo $image | tr '/:' '--'):${playbook##*/}
   docker pull $image
   docker build -t $new_image -f dockerfiles/$image .
 
@@ -84,7 +96,7 @@ then
 fi
 
 docker run -ti -d --rm \
-                  --name ansible-test \
+                  --name ansibeer \
                   -v $ansible_home:/etc/ansible:ro \
                   -v $PWD/$playbook:/playbook:rw \
                   $image bash
@@ -95,6 +107,32 @@ then
   exit 1
 fi
 
-docker exec -ti ansible-test ansible-playbook --connection=local -i 'localhost,' /playbook
-docker exec -ti ansible-test bash
-docker stop ansible-test
+if [ -n "$show_facts" ]
+then
+  docker exec -ti ansibeer ansible localhost --connection=local -m setup
+fi
+
+echo "Checking Ansible syntax"
+
+docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' --syntax-check /playbook
+
+if [ "$?" == "0" ]
+then
+  echo "Syntax check complete"
+else
+  echo "Syntax check failed"
+  exit 1
+fi
+
+echo "Applying playbook"
+
+docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' /playbook
+exit_code = $?
+
+if [ -t 1 ]
+then
+  docker exec -ti ansibeer bash
+fi
+
+docker stop ansibeer
+exit $exit_code
