@@ -137,17 +137,20 @@ then
   echo "Syntax check complete"
 else
   echo "Syntax check failed"
-  exit 1
+  exit_code=1
 fi
 
-echo "Applying playbook"
-
-docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' /playbook
-exit_code=$?
-
-if [ -t 1 ]
+if [ -z "$exit_code" ]
 then
-  docker exec -ti ansibeer bash
+  echo "Applying playbook"
+
+  docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' /playbook
+  exit_code=$?
+
+  if [ -t 1 ]
+  then
+    docker exec -ti ansibeer bash
+  fi
 fi
 
 docker stop ansibeer
