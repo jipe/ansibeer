@@ -111,6 +111,10 @@ then
   playbook=$PWD/$playbook
 fi
 
+inventory=$(grep 'hosts:' $playbook | cut -d':' -f2 | tr "\n" ',' | sed 's/  */ /g' | sed 's/^ //g')
+
+echo "Using inventory: '$inventory'"
+
 docker run -ti -d --rm \
                   --name ansibeer \
                   -v $ansible_home:/etc/ansible:ro \
@@ -130,7 +134,7 @@ fi
 
 echo "Checking Ansible syntax"
 
-docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' --syntax-check /playbook
+docker exec -ti ansibeer ansible-playbook --connection=local -i "$inventory" --syntax-check /playbook
 
 if [ "$?" == "0" ]
 then
@@ -144,7 +148,7 @@ if [ -z "$exit_code" ]
 then
   echo "Applying playbook"
 
-  docker exec -ti ansibeer ansible-playbook --connection=local -i 'localhost,' /playbook
+  docker exec -ti ansibeer ansible-playbook --connection=local -i "$inventory" /playbook
   exit_code=$?
 
   if [ -t 1 ]
