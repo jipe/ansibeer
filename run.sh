@@ -19,7 +19,8 @@ function usage {
   echo "  -a, --ansible-home : Specify location of Ansible repository"
   echo "                       Default: ANSIBLE_HOME env var or $default_ansible_home"
   echo "  -f,        --facts : Show container facts"
-  echo "  -i,        --image : Specify the base Docker image to use"
+  echo "             --image : Specify Docker image to use"
+  echo "  -i,    --inventory : Specify Ansible inventory"
   echo "                       Default: IMAGE env var or $default_image"
   echo
 
@@ -40,6 +41,9 @@ do
         ;;
       image)
         image=$arg
+        ;;
+      inventory)
+        inventory=$arg
         ;;
       -*)
         usage "Value for '$expect' seems to be a flag"
@@ -69,11 +73,17 @@ do
       -h|--help)
         usage
         ;;
-      -i|--image)
+      --image)
         expect=image
         ;;
       --image=*)
         image=${arg##--image=}
+        ;;
+      -i|--inventory)
+        expect=inventory
+        ;;
+      --inventory=*)
+        inventory=${arg##--inventory=}
         ;;
       *)
         if [ -n "$playbook" ]
@@ -111,14 +121,25 @@ then
   playbook=$PWD/$playbook
 fi
 
-inventory=$(grep 'hosts:' $playbook | cut -d':' -f2 | tr "\n" ',' | sed 's/  */ /g' | sed 's/^ //g')
+if [ -n "$inventory" ]
+then
+  echo "Using inventory file: $inventory"
+else
+  inventory=$(grep 'hosts:' $playbook | cut -d':' -f2 | tr "\n" ',' | sed 's/  */ /g' | sed 's/^ //g')
+  echo "Using inventory: '$inventory'"
+fi
 
-echo "Using inventory: '$inventory'"
+
+if [ -e /var/run/docker.sock ]
+then
+  docker_args="-v /var/run/docker.sock:/var/run/docker.sock"
+fi
 
 docker run -ti -d --rm \
                   --name ansibeer \
                   -v $ansible_home:/etc/ansible:ro \
                   -v $playbook:/playbook:rw \
+                  $docker_args \
                   $image bash
 
 if [ ! "$?" == "0" ]
