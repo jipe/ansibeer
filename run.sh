@@ -129,18 +129,21 @@ else
   echo "Using inventory: '$inventory'"
 fi
 
-
-if [ -e /var/run/docker.sock ]
-then
-  docker_args="-v /var/run/docker.sock:/var/run/docker.sock"
-fi
-
+# Run a container where docker and systemd plays somewhat nicely together
 docker run -ti -d --rm \
-                  --name ansibeer \
+                  -e "container=docker" \
+                  --cap-add SYS_ADMIN \
+                  --tmpfs /run \
+                  --tmpfs /run/lock \
+                  --stop-signal SIGRTMIN+4 \
+                  -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+                  -v /var/run/docker.sock:/var/run/docker.sock \
+                  -v /run/docker.sock:/run/docker.sock \
                   -v $ansible_home:/etc/ansible:ro \
-                  -v $playbook:/playbook:rw \
+                  -v $playbook:/playbook \
+                  --name ansibeer \
                   $docker_args \
-                  $image bash
+                  $image
 
 if [ ! "$?" == "0" ]
 then

@@ -23,11 +23,26 @@ case, you can put a Dockerfile that will install Ansible with the same
 name as the image in the `dockerfiles` directory and Ansibeer will
 build an image from that and use that instead of the original image.
 
-There are convenience scripts for using `debian:jessie` and `debian:stretch`.
-These are `jessie.sh` and `stretch.sh` respectively. So you could test on
-a Debian Jessie container with
+There is a convenience script for using `debian:stretch` called `stretch.sh`.
+You could test on a Debian Stretch container with
 
-    $ ./jessie.sh <playbook>
+    $ ./stretch.sh <playbook>
 
 The `playbooks` directory is in `.gitignore`, so that is a perfectly fine
 place for putting your experimental playbooks you want to test.
+
+## Testing systemd services and Docker containers
+
+Ansibeer is running its docker container with a set of docker arguments that allows
+it to run systemd as the init process. This makes it possible for you to test
+that systemd services are installed and run properly.
+
+If you want to test systemd services, you should make sure, the Docker image you're
+using has systemd installed.
+
+It also mounts the Docker socket inside the container so you can spin up containers.
+The containers will be spun up on the host machine and not inside the Ansibeer container
+though. This makes it impossible to test docker containers that mount local files into
+the containers since Docker will look for the local files on the host rather than inside
+the Ansibeer container. I haven't found a solution to this problem besides running Docker
+in Docker using a privileged container and this is not really a path I'm likely to take.
