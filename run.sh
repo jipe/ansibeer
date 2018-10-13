@@ -36,6 +36,9 @@ do
   if [ -n "$expect" ]
   then
     case $expect in
+      ansible_home)
+        ansible_home=$arg
+        ;;
       default_image)
         default_image=$arg
         ;;
